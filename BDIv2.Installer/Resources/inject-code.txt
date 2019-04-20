@@ -1,0 +1,8 @@
+const path = require('path');
+const fs = require('fs');
+const Module = require('module');
+const electron = require('electron');
+const basePath = path.join(__dirname, '..', 'app.asar');
+electron.app.getAppPath = () => basePath;
+Module._load(basePath, null, true);
+electron.app.on('ready', () => new (require(':bdPath').BetterDiscord)());
