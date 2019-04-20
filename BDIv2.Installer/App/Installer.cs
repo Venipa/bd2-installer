@@ -22,11 +22,13 @@ namespace BDIv2.App
         private string DiscordPath { get => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Discord"); }
         private string BetterDiscordPath { get => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BetterDiscord2"); }
         private string LatestAppPath { get; set; }
+        private SimpleLogger log = new SimpleLogger();
         private string getLatestAppPath()
         {
             AppDomain.CurrentDomain.UnhandledException += (s, e) =>
             {
                 Console.WriteLine("Error: " + (e.ExceptionObject as Exception).Message);
+                log.Error((e.ExceptionObject as Exception).ToString());
             };
             var latestPath = Directory.GetDirectories(this.DiscordPath, "app-*", SearchOption.TopDirectoryOnly).ToList().OrderBy(x =>
             {
@@ -51,7 +53,9 @@ namespace BDIv2.App
             {
                 return null;
             }
-            return Path.Combine(this.LatestAppPath, "resources", "app", "index.js");
+            var pth = Path.Combine(this.LatestAppPath, "resources", "app", "index.js");
+            Console.WriteLine($"index.js: {File.Exists(pth).ToString()}");
+            return pth;
 
         }
         private string getPackageJson()
@@ -60,7 +64,9 @@ namespace BDIv2.App
             {
                 return null;
             }
-            return Path.Combine(this.LatestAppPath, "resources", "app", "package.json");
+            var pth = Path.Combine(this.LatestAppPath, "resources", "app", "package.json");
+            Console.WriteLine($"package.json: {File.Exists(pth).ToString()}");
+            return pth;
 
         }
         private string getAppRoot()
@@ -69,7 +75,9 @@ namespace BDIv2.App
             {
                 return null;
             }
-            return Path.Combine(this.LatestAppPath, "resources", "app");
+            var pth = Path.Combine(this.LatestAppPath, "resources", "app");
+            Console.WriteLine($"app/: {Directory.Exists(pth).ToString()}");
+            return pth;
         }
         public Installer()
         {
@@ -86,6 +94,7 @@ namespace BDIv2.App
                 catch (Exception ex)
                 {
                     Console.WriteLine("Error: {0}\nInstallation faulted", ex.Message);
+                    log.Error(ex.ToString());
                 }
             });
 
@@ -103,6 +112,11 @@ namespace BDIv2.App
             else
             {
                 Console.WriteLine("Latest Discord App Path: {0}", path);
+            }
+            var rapp = Path.Combine(path, "resources", "app");
+            if (!Directory.Exists(rapp))
+            {
+                Directory.CreateDirectory(rapp);
             }
             this.LatestAppPath = path;
         }
@@ -124,8 +138,9 @@ namespace BDIv2.App
                     try
                     {
                         return x.MainModule.FileName == Path.Combine(LatestAppPath, "Discord.exe");
-                    } catch
+                    } catch (Exception ex)
                     {
+                        log.Error(ex.ToString());
                         return false;
                     }
                 }).ToList().ForEach(x =>
